@@ -1,6 +1,8 @@
 # Finance CBDC Ledger Prototype
 
-A minimal Go-based prototype service intended as a starting point for a Central Bank Digital Currency (CBDC) ledger system. Currently, the repository contains a single HTTP health-check endpoint and is **not** a functional ledger — see the [Workability Assessment](#-workability-assessment) section for an honest evaluation.
+![Finance CBDC Ledger Prototype Banner](https://image.pollinations.ai/prompt/futuristic%20central%20bank%20digital%20currency%20ledger%20banner%2C%20glowing%20blue%20blockchain%20nodes%2C%20financial%20technology%20circuitry%2C%20dark%20navy%20background%2C%20professional%20fintech%20aesthetic%2C%20wide%20cinematic%20composition?width=1600&height=500&nologo=true)
+
+> A minimal Go-based prototype service intended as a starting point for a Central Bank Digital Currency (CBDC) ledger system. Currently, the repository contains a single HTTP health-check endpoint and is **not** a functional ledger — see the [Workability Assessment](#️-workability-assessment) section for an honest evaluation.
 
 ---
 
@@ -16,6 +18,8 @@ A minimal Go-based prototype service intended as a starting point for a Central 
 | **Containerization** | Docker (single-stage Alpine build) |
 | **License** | VisionQuantech Custom Commercial License (see [LICENSE](LICENSE)) |
 
+![Digital Ledger Visualization](https://image.pollinations.ai/prompt=abstract%20digital%20ledger%20double%20entry%20bookkeeping%20visualization%2C%20glowing%20transaction%20flows%20between%20accounts%2C%20teal%20and%20gold%20accents%2C%20minimalist%20fintech%20illustration?width=1200&height=400&nologo=true)
+
 ---
 
 ## 🏗️ Architecture & How It Works
@@ -30,10 +34,42 @@ The current codebase is intentionally minimal. The entire application lives in `
    The payload is the current server timestamp, functioning as a liveness/health probe.
 3. **Server Lifecycle** — `http.ListenAndServe(":8080", nil)` starts the server on port **8080**. Startup and fatal errors are logged via the standard `log` package. If the server fails to bind, the process exits with a fatal log message.
 
-**Request flow:**
+### Component Diagram
 
+```mermaid
+flowchart LR
+    Client([🌐 Client / curl]) -->|"GET /"| Mux["net/http<br/>DefaultServeMux"]
+    Mux --> Handler["Root Handler<br/>fmt.Fprintf"]
+    Handler --> Time["time.Now()"]
+    Handler --> Resp["Plain-text response:<br/>'System Operational: <timestamp>'"]
+    Resp --> Client
+    Main["main()"] -->|"registers /"| Mux
+    Main -->|"ListenAndServe :8080"| Server["HTTP Server :8080"]
+    Server --> Mux
+    Server -.->|"fatal on bind failure"| Log["log.Fatal"]
 ```
-Client ──GET /──▶ :8080 ──▶ DefaultServeMux ──▶ handler ──▶ "System Operational: <timestamp>"
+
+### Request Lifecycle
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as Go HTTP Server (:8080)
+    participant H as Root Handler
+    C->>S: GET /
+    S->>H: Dispatch via DefaultServeMux
+    H->>H: time.Now()
+    H-->>C: 200 OK — "System Operational: <timestamp>"
+```
+
+### Container Topology
+
+```mermaid
+flowchart TB
+    subgraph Docker["🐳 Docker Container (golang:1.20-alpine)"]
+        App["./app binary<br/>(built from main.go)"] --> Port["Exposes :8080"]
+    end
+    Host["Host Machine<br/>localhost:8080"] -->|"port mapping -p 8080:8080"| Port
 ```
 
 There are currently **no** ledger data structures, transaction models, account balances, double-entry bookkeeping logic, consensus mechanisms, cryptographic signing, or persistence layers implemented. The repository name describes the *intended* direction of the project.
@@ -117,6 +153,19 @@ An honest evaluation of the current state:
 - ❌ **No CI/CD, linting, or documentation of the intended ledger design.**
 
 **Verdict:** This repository is a **scaffold / hello-world skeleton**, not a production-ready or even functionally complete CBDC ledger prototype. It is a valid starting point that compiles and deploys, but it requires **substantial implementation work** — domain models, transaction validation, persistence, security, and testing — before it delivers on its stated purpose.
+
+### Target Architecture (Aspirational)
+
+```mermaid
+flowchart TB
+    subgraph Future["🔮 Intended Future State"]
+        API["REST API Layer<br/>/transactions /accounts /balances"] --> Core["Ledger Core<br/>Double-Entry Engine"]
+        Core --> DB[("PostgreSQL<br/>Persistent Store")]
+        Core --> Crypto["Signing & Audit<br/>Module"]
+        Wallet["Wallet Service<br/>Issuance / Redemption"] --> Core
+    end
+    Current["Current State:<br/>Health-check only"] -.->|"roadmap"| Future
+```
 
 ---
 
